@@ -1,0 +1,28 @@
+.signup {
+    margin-left: 35%;
+    padding-top: 5%;
+}
+
+.card {
+    width: 50%;
+    top: 10%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    border-radius: 25px;
+    background-color: ghostwhite
+}
+
+.form {
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+.formlabel {
+    margin-top: 0.5rem;
+}
+
+.forminput {
+    border: 1px solid black;
+    margin-bottom: 0.5rem;
+    background-color: floralwhite
+}
