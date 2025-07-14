@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Alert, Button, Card, Form } from "react-bootstrap";
 import "./signup.css";
 
-const Login = () => {
+const Login = ({ onLoginSuccess }) => {
   const [enteredMail, setEnteredMail] = useState("");
   const [enteredPass, setEnteredPass] = useState("");
   const [error, setError] = useState("");
@@ -36,6 +36,7 @@ const Login = () => {
       .then((res) => {
         if (res.ok) {
           console.log("User has successfully logged in");
+          onLoginSuccess();
           return res.json();
         } else {
           return res.json().then((data) => {
