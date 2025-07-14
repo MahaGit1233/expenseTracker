@@ -3,17 +3,20 @@ const app = express();
 const db = require("./utils/db-connection");
 const cors = require("cors");
 const signupRouter = require("./routes/signupRoute");
+const expensesRouter = require("./routes/expensesRoute");
 
 app.use(cors());
 app.use(express.json());
 
 const userModal = require("./modals/Users");
+const expenseModal=require('./modals/Expenses');
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello World</h1>");
 });
 
 app.use("/users", signupRouter);
+app.use("/expenses", expensesRouter);
 
 db.sync({ force: true })
   .then(() => {
