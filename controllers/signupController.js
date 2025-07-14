@@ -1,5 +1,6 @@
 const Users = require("../modals/Users");
 const db = require("../utils/db-connection");
+const bcrypt = require("bcrypt");
 
 const addSignedUpUsers = async (req, res) => {
   try {
@@ -12,10 +13,12 @@ const addSignedUpUsers = async (req, res) => {
         .json({ message: "User with this email already exists" });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await Users.create({
       name: name,
       email: email,
-      password: password,
+      password: hashedPassword,
     });
 
     res.status(200).json({ message: `User with name: ${name} is added` });
@@ -38,7 +41,9 @@ const loginUsers = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
