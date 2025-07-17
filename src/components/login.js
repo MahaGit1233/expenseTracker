@@ -36,13 +36,16 @@ const Login = ({ onLoginSuccess }) => {
       .then((res) => {
         if (res.ok) {
           console.log("User has successfully logged in");
-          onLoginSuccess();
           return res.json();
         } else {
           return res.json().then((data) => {
             throw new Error(data.message || "Login failed");
           });
         }
+      })
+      .then((data) => {
+        onLoginSuccess();
+        localStorage.setItem("token", data.token);
       })
       .catch((err) => {
         alert(err.message);

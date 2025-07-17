@@ -30,6 +30,7 @@ const AddExpenses = () => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: localStorage.getItem("token"),
       },
     })
       .then((res) => {
@@ -65,6 +66,7 @@ const AddExpenses = () => {
         body: JSON.stringify(Expenses),
         headers: {
           "Content-Type": "application/json",
+          Authorization: localStorage.getItem("token"),
         },
       });
       const data = await response.json();
@@ -83,6 +85,7 @@ const AddExpenses = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          Authorization: localStorage.getItem("token"),
         },
       }
     );
@@ -151,7 +154,7 @@ const AddExpenses = () => {
 
       {expenses.length > 0 && (
         <div style={{ marginTop: "1rem" }}>
-          <h4 style={{ textAlign: "center" }}>Your Expenses</h4>
+          <h4>Your Expenses</h4>
           {expenses.map((expense, index) => (
             <Card key={index} className="card" style={{ marginBottom: "1rem" }}>
               <Card.Body>
