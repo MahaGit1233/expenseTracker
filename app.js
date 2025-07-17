@@ -9,7 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 const userModal = require("./modals/Users");
-const expenseModal=require('./modals/Expenses');
+const expenseModal = require("./modals/Expenses");
+const indexModal = require("./modals/index");
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello World</h1>");

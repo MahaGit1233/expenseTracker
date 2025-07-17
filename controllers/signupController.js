@@ -1,6 +1,11 @@
 const Users = require("../modals/Users");
 const db = require("../utils/db-connection");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const generateAccessToken = (id) => {
+  return jwt.sign({ id }, "123456789");
+};
 
 const addSignedUpUsers = async (req, res) => {
   try {
@@ -47,7 +52,10 @@ const loginUsers = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    res.status(200).json({ message: "Login successful" });
+    res.status(200).json({
+      message: "Login successful",
+      token: generateAccessToken(user.id),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

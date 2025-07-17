@@ -9,6 +9,7 @@ const addExpenses = async (req, res) => {
       amountSpent: amountSpent,
       description: description,
       category: category,
+      UserId: req.user.id,
     });
 
     res.status(201).send(`Expense added successfully`);
@@ -19,7 +20,9 @@ const addExpenses = async (req, res) => {
 
 const getExpenses = async (req, res) => {
   try {
-    const expense = await Expenses.findAll();
+    const expense = await Expenses.findAll({
+      where: { UserId: req.user.id },
+    });
     res.status(200).send(expense);
   } catch (error) {
     res.status(500).send("Unable to fetch the expenses");
@@ -32,6 +35,7 @@ const deleteExpenses = async (req, res) => {
     const expense = await Expenses.destroy({
       where: {
         id: id,
+        UserId: req.user.id,
       },
     });
 
