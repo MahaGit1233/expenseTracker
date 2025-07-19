@@ -4,6 +4,7 @@ const db = require("./utils/db-connection");
 const cors = require("cors");
 const signupRouter = require("./routes/signupRoute");
 const expensesRouter = require("./routes/expensesRoute");
+const paymentRouter = require("./routes/paymentRoute");
 
 app.use(cors());
 app.use(express.json());
@@ -11,6 +12,7 @@ app.use(express.json());
 const userModal = require("./modals/Users");
 const expenseModal = require("./modals/Expenses");
 const indexModal = require("./modals/index");
+const orderModal = require("./modals/Orders");
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello World</h1>");
@@ -18,6 +20,7 @@ app.get("/", (req, res) => {
 
 app.use("/users", signupRouter);
 app.use("/expenses", expensesRouter);
+app.use("/payment", paymentRouter);
 
 db.sync({ force: true })
   .then(() => {
