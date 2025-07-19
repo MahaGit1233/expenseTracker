@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Form } from "react-bootstrap";
+import { Button, Card, Form, Navbar } from "react-bootstrap";
+import { load } from "@cashfreepayments/cashfree-js";
 import "./signup.css";
 
-const AddExpenses = () => {
+const AddExpenses = (props) => {
   const [enteredAmount, setEnteredAmount] = useState("");
   const [enteredDescription, setEnteredDescription] = useState("");
   const [selectedOption, SetSelectedOption] = useState("");
   const [showForm, setShowForm] = useState("");
   const [expenses, setExpenses] = useState([]);
+
+  const token = localStorage.getItem("token");
 
   const amountChangeHandler = (event) => {
     setEnteredAmount(event.target.value);
@@ -30,7 +33,7 @@ const AddExpenses = () => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: localStorage.getItem("token"),
+        Authorization: token,
       },
     })
       .then((res) => {
@@ -66,11 +69,12 @@ const AddExpenses = () => {
         body: JSON.stringify(Expenses),
         headers: {
           "Content-Type": "application/json",
-          Authorization: localStorage.getItem("token"),
+          Authorization: token,
         },
       });
       const data = await response.json();
       console.log(data);
+      setExpenses((prev) => [...prev, data]);
     }
 
     setEnteredAmount("");
@@ -85,7 +89,7 @@ const AddExpenses = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: localStorage.getItem("token"),
+          Authorization: token,
         },
       }
     );
@@ -97,87 +101,160 @@ const AddExpenses = () => {
     );
   };
 
+  const premiumHandler = async () => {
+    const response = await fetch("http://localhost:4000/payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
+    });
+
+    const data = await response.json();
+
+    if (data && data.payment_session_id) {
+      const cashfree = await load({
+        mode: "sandbox",
+      });
+
+      cashfree.checkout({
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: "_blank",
+      });
+
+      setTimeout(async () => {
+        try {
+          console.log("data.order_id:", data.order_id);
+          const res = await fetch(
+            `http://localhost:4000/payment/status/${data.order_id}`,
+            {
+              headers: {
+                Authorization: token,
+              },
+            }
+          );
+
+          const statusData = await res.json();
+          alert(statusData.message);
+        } catch (error) {
+          alert("Something went wrong while checking payment status.");
+        }
+      }, 40000);
+    }
+  };
+
   return (
-    <div className="signup">
-      <Card className="card">
-        {showForm ? (
-          <Form className="form" onSubmit={addExpenseHandler}>
-            <Form.Group>
-              <Form.Label className="formlabel">Amount Spent:</Form.Label>
-              <Form.Control
-                className="forminput"
-                type="number"
-                placeholder="Enter amount"
-                value={enteredAmount}
-                onChange={amountChangeHandler}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label className="formlabel">Description:</Form.Label>
-              <Form.Control
-                className="forminput"
-                type="text"
-                placeholder="Describe your expense"
-                value={enteredDescription}
-                onChange={descriptionChangeHandler}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label className="formlabel">Category:</Form.Label>
-              <Form.Select
-                className="forminput"
-                value={selectedOption}
-                onChange={optionChangeHandler}
-              >
-                <option value="">--Select Category--</option>
-                <option>Food</option>
-                <option>Cloths</option>
-                <option>Fuel</option>
-                <option>Electricity</option>
-                <option>Groceries</option>
-              </Form.Select>
-            </Form.Group>
-            <div style={{ textAlign: "center", paddingBottom: "0.5rem" }}>
-              <Button type="submit" variant="outline-dark">
-                Add
+    <div>
+      <Navbar
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          backgroundColor: "ButtonFace",
+          marginBottom: "1rem",
+        }}
+      >
+        <i style={{ paddingLeft: "15px" }}>Welcome to Expense Tracker!</i>
+
+        <div
+          style={{
+            paddingRight: "30px",
+            display: "flex",
+            gap: "5px",
+          }}
+        >
+          <Button onClick={premiumHandler} variant="outline-dark">
+            Premium
+          </Button>
+          <Button onClick={props.logoutHandler} variant="outline-dark">
+            Logout
+          </Button>
+        </div>
+      </Navbar>
+      <div className="signup">
+        <Card className="card">
+          {showForm ? (
+            <Form className="form" onSubmit={addExpenseHandler}>
+              <Form.Group>
+                <Form.Label className="formlabel">Amount Spent:</Form.Label>
+                <Form.Control
+                  className="forminput"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={enteredAmount}
+                  onChange={amountChangeHandler}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label className="formlabel">Description:</Form.Label>
+                <Form.Control
+                  className="forminput"
+                  type="text"
+                  placeholder="Describe your expense"
+                  value={enteredDescription}
+                  onChange={descriptionChangeHandler}
+                />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label className="formlabel">Category:</Form.Label>
+                <Form.Select
+                  className="forminput"
+                  value={selectedOption}
+                  onChange={optionChangeHandler}
+                >
+                  <option value="">--Select Category--</option>
+                  <option>Food</option>
+                  <option>Cloths</option>
+                  <option>Fuel</option>
+                  <option>Electricity</option>
+                  <option>Groceries</option>
+                </Form.Select>
+              </Form.Group>
+              <div style={{ textAlign: "center", paddingBottom: "0.5rem" }}>
+                <Button type="submit" variant="outline-dark">
+                  Add
+                </Button>
+              </div>
+            </Form>
+          ) : (
+            <div style={{ textAlign: "center", paddingTop: "1rem" }}>
+              <Button onClick={toggleForm} variant="outline-dark">
+                Add Expenses
               </Button>
             </div>
-          </Form>
-        ) : (
-          <div style={{ textAlign: "center", paddingTop: "1rem" }}>
-            <Button onClick={toggleForm} variant="outline-dark">
-              Add Expenses
-            </Button>
+          )}
+        </Card>
+
+        {expenses.length > 0 && (
+          <div style={{ marginTop: "1rem" }}>
+            <h4>Your Expenses</h4>
+            {expenses.map((expense, index) => (
+              <Card
+                key={index}
+                className="card"
+                style={{ marginBottom: "1rem" }}
+              >
+                <Card.Body>
+                  <p>
+                    <strong>Amount:</strong> ₹{expense.amountSpent}
+                  </p>
+                  <p>
+                    <strong>Description:</strong> {expense.description}
+                  </p>
+                  <p>
+                    <strong>Category:</strong> {expense.category}
+                  </p>
+                  <Button
+                    variant="outline-dark"
+                    onClick={() => deleteHandler(expense.id)}
+                  >
+                    Delete
+                  </Button>
+                </Card.Body>
+              </Card>
+            ))}
           </div>
         )}
-      </Card>
-
-      {expenses.length > 0 && (
-        <div style={{ marginTop: "1rem" }}>
-          <h4>Your Expenses</h4>
-          {expenses.map((expense, index) => (
-            <Card key={index} className="card" style={{ marginBottom: "1rem" }}>
-              <Card.Body>
-                <p>
-                  <strong>Amount:</strong> ₹{expense.amountSpent}
-                </p>
-                <p>
-                  <strong>Description:</strong> {expense.description}
-                </p>
-                <p>
-                  <strong>Category:</strong> {expense.category}
-                </p>
-                <Button
-                  variant="outline-dark"
-                  onClick={() => deleteHandler(expense.id)}
-                >
-                  Delete
-                </Button>
-              </Card.Body>
-            </Card>
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Signup from "./components/signup";
 import Login from "./components/login";
 import AddExpenses from "./components/AddExpenses";
@@ -7,12 +7,23 @@ function App() {
   const [isLogin, serIsLogin] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   const toggleAuth = () => {
     serIsLogin((prev) => !prev);
   };
 
+  const logoutHandler = () => {
+    setIsLoggedIn(false);
+  };
+
   return (
-    <div style={{ paddingTop: "7%" }}>
+    <div>
       {!isLoggedIn ? (
         <>
           <p
@@ -21,6 +32,7 @@ function App() {
               cursor: "pointer",
               color: "blue",
               textDecoration: "underline",
+              paddingTop: "5%",
             }}
             onClick={toggleAuth}
           >
@@ -35,7 +47,7 @@ function App() {
           )}
         </>
       ) : (
-        <AddExpenses />
+        <AddExpenses onLogout={logoutHandler} />
       )}
     </div>
   );
