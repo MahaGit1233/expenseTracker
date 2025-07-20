@@ -5,6 +5,7 @@ const cors = require("cors");
 const signupRouter = require("./routes/signupRoute");
 const expensesRouter = require("./routes/expensesRoute");
 const paymentRouter = require("./routes/paymentRoute");
+const preiumRouter = require("./routes/premiumRoute");
 
 app.use(cors());
 app.use(express.json());
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
 app.use("/users", signupRouter);
 app.use("/expenses", expensesRouter);
 app.use("/payment", paymentRouter);
+app.use("/premium", preiumRouter);
 
 db.sync({ force: true })
   .then(() => {
