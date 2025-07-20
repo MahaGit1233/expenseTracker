@@ -9,6 +9,8 @@ const AddExpenses = (props) => {
   const [selectedOption, SetSelectedOption] = useState("");
   const [showForm, setShowForm] = useState("");
   const [expenses, setExpenses] = useState([]);
+  const [header, setHeader] = useState(false);
+  const [leaderboardValues, setLeaderboardValues] = useState([]);
 
   const token = localStorage.getItem("token");
 
@@ -135,6 +137,11 @@ const AddExpenses = (props) => {
           );
 
           const statusData = await res.json();
+          console.log(statusData);
+          if (statusData.status === "Success") {
+            setHeader(true);
+          }
+
           alert(statusData.message);
         } catch (error) {
           alert("Something went wrong while checking payment status.");
@@ -143,8 +150,55 @@ const AddExpenses = (props) => {
     }
   };
 
+  const leaderboardExpensesHandler = async () => {
+    try {
+      const res = await fetch("http://localhost:4000/premium/leaderboard", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
+
+      const data = await res.json();
+      console.log("Leaderboard:", data);
+      setLeaderboardValues(data);
+    } catch (error) {
+      console.log("Error fetching leaderboard:", error.message);
+    }
+  };
+
   return (
     <div>
+      {header && (
+        <Navbar
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            backgroundColor: "green",
+            color: "white",
+            marginBottom: "1rem",
+          }}
+        >
+          <i style={{ paddingLeft: "15px" }}>
+            Congratulations! you're a premium user now.
+          </i>
+          <div
+            style={{
+              paddingRight: "30px",
+              display: "flex",
+              gap: "5px",
+            }}
+          >
+            <Button
+              onClick={leaderboardExpensesHandler}
+              variant="outline-light"
+            >
+              Click here to see Leaderboard
+            </Button>
+          </div>
+        </Navbar>
+      )}
       <Navbar
         style={{
           display: "flex",
@@ -165,7 +219,7 @@ const AddExpenses = (props) => {
           <Button onClick={premiumHandler} variant="outline-dark">
             Premium
           </Button>
-          <Button onClick={props.logoutHandler} variant="outline-dark">
+          <Button onClick={props.onLogout} variant="outline-dark">
             Logout
           </Button>
         </div>
@@ -226,7 +280,7 @@ const AddExpenses = (props) => {
 
         {expenses.length > 0 && (
           <div style={{ marginTop: "1rem" }}>
-            <h4>Your Expenses</h4>
+            <h3>Your Expenses</h3>
             {expenses.map((expense, index) => (
               <Card
                 key={index}
@@ -249,6 +303,28 @@ const AddExpenses = (props) => {
                   >
                     Delete
                   </Button>
+                </Card.Body>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {leaderboardValues.length > 0 && (
+          <div style={{ marginTop: "1rem" }}>
+            <h4>Leaderboard</h4>
+            {leaderboardValues.map((entry, index) => (
+              <Card
+                key={index}
+                className="card"
+                style={{ marginBottom: "0.5rem" }}
+              >
+                <Card.Body>
+                  <p>
+                    <strong>Name:</strong> {entry.User?.Name}
+                  </p>
+                  <p>
+                    <strong>Total Spent:</strong> ₹{entry.totalSpent}
+                  </p>
                 </Card.Body>
               </Card>
             ))}
