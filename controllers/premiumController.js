@@ -10,7 +10,7 @@ const getPremiumExpenses = async (req, res) => {
         "UserId",
         [Sequelize.fn("SUM", Sequelize.col("amountSpent")), "totalSpent"],
       ],
-      include: [{ model: Users, attributes: ["Name", "Email"] }],
+      include: [{ model: Users, attributes: ["Name"] }],
       group: ["UserId"],
       order: [[Sequelize.literal("totalSpent"), "DESC"]],
     });
