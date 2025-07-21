@@ -320,10 +320,10 @@ const AddExpenses = (props) => {
               >
                 <Card.Body>
                   <p>
-                    <strong>Name:</strong> {entry.User?.Name}
+                    <strong>Name:</strong> {entry.name}
                   </p>
                   <p>
-                    <strong>Total Spent:</strong> ₹{entry.totalSpent}
+                    <strong>Total Spent:</strong> ₹{entry.totalAmount}
                   </p>
                 </Card.Body>
               </Card>
