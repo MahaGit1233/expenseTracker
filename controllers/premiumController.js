@@ -5,17 +5,12 @@ const { Sequelize } = require("sequelize");
 
 const getPremiumExpenses = async (req, res) => {
   try {
-    const leaderboardExpenses = await Expenses.findAll({
-      attributes: [
-        "UserId",
-        [Sequelize.fn("SUM", Sequelize.col("amountSpent")), "totalSpent"],
-      ],
-      include: [{ model: Users, attributes: ["Name"] }],
-      group: ["UserId"],
-      order: [[Sequelize.literal("totalSpent"), "DESC"]],
+    const leaderboardExpenses = await Users.findAll({
+      attributes: ["name", "totalAmount"],
+      order: [["totalAmount", "DESC"]],
     });
 
-    res.status(200).send(leaderboardExpenses);
+    res.status(200).json(leaderboardExpenses);
   } catch (error) {
     res.status(500).send("Unable to fetch the expenses");
   }
