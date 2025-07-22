@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Form, Navbar } from "react-bootstrap";
+import { Button, Card, Form, Navbar, Table } from "react-bootstrap";
 import { load } from "@cashfreepayments/cashfree-js";
 import "./signup.css";
 
@@ -31,6 +31,8 @@ const AddExpenses = (props) => {
   };
 
   useEffect(() => {
+    if (!token) return;
+
     fetch(`http://localhost:4000/expenses/get`, {
       method: "GET",
       headers: {
@@ -51,7 +53,7 @@ const AddExpenses = (props) => {
       .catch((err) => {
         console.log(err.message);
       });
-  }, []);
+  }, [token]);
 
   const addExpenseHandler = async (event) => {
     event.preventDefault();
@@ -76,7 +78,7 @@ const AddExpenses = (props) => {
       });
       const data = await response.json();
       console.log(data);
-      setExpenses((prev) => [...prev, data]);
+      setExpenses((prev) => [...prev, data.expense]);
     }
 
     setEnteredAmount("");
@@ -177,7 +179,7 @@ const AddExpenses = (props) => {
             justifyContent: "space-between",
             backgroundColor: "green",
             color: "white",
-            marginBottom: "1rem",
+            marginBottom: "0.3rem",
           }}
         >
           <i style={{ paddingLeft: "15px" }}>
@@ -199,6 +201,7 @@ const AddExpenses = (props) => {
           </div>
         </Navbar>
       )}
+
       <Navbar
         style={{
           display: "flex",
@@ -224,6 +227,7 @@ const AddExpenses = (props) => {
           </Button>
         </div>
       </Navbar>
+
       <div className="signup">
         <Card className="card">
           {showForm ? (
@@ -277,60 +281,70 @@ const AddExpenses = (props) => {
             </div>
           )}
         </Card>
+      </div>
 
-        {expenses.length > 0 && (
-          <div style={{ marginTop: "1rem" }}>
-            <h3>Your Expenses</h3>
-            {expenses.map((expense, index) => (
-              <Card
-                key={index}
-                className="card"
-                style={{ marginBottom: "1rem" }}
-              >
-                <Card.Body>
-                  <p>
-                    <strong>Amount:</strong> ₹{expense.amountSpent}
-                  </p>
-                  <p>
-                    <strong>Description:</strong> {expense.description}
-                  </p>
-                  <p>
-                    <strong>Category:</strong> {expense.category}
-                  </p>
+      {expenses.length > 0 && (
+        <div style={{ marginTop: "1rem" }}>
+          <h3 style={{ marginLeft: "20%" }}>Your Expenses:</h3>
+          <Table
+            striped
+            hover
+            responsive
+            className="mt-4 shadow-sm rouded"
+            style={{ width: "50%", marginLeft: "25%", textAlign: "center" }}
+          >
+            <thead className="table-success">
+              <tr>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Category</th>
+              </tr>
+            </thead>
+            {expenses.map((expense) => (
+              <tbody>
+                <td>₹{expense.amountSpent}</td>
+                <td>{expense.description}</td>
+                <td>{expense.category}</td>
+                <td>
                   <Button
                     variant="outline-dark"
+                    size="sm"
                     onClick={() => deleteHandler(expense.id)}
                   >
                     Delete
                   </Button>
-                </Card.Body>
-              </Card>
+                </td>
+              </tbody>
             ))}
-          </div>
-        )}
+          </Table>
+        </div>
+      )}
 
-        {leaderboardValues.length > 0 && (
-          <div style={{ marginTop: "1rem" }}>
-            <h4>Leaderboard</h4>
-            {leaderboardValues.map((entry, index) => (
-              <Card
-                key={index}
-                className="card"
-                style={{ marginBottom: "0.5rem" }}
-              >
-                <Card.Body>
-                  <p>
-                    <strong>Name:</strong> {entry.name}
-                  </p>
-                  <p>
-                    <strong>Total Spent:</strong> ₹{entry.totalAmount}
-                  </p>
-                </Card.Body>
-              </Card>
+      {leaderboardValues.length > 0 && (
+        <div style={{ marginTop: "1rem" }}>
+          <h4 style={{ marginLeft: "20%" }}>Leaderboard</h4>
+          <Table
+            striped
+            hover
+            responsive
+            className="mt-4 shadow-sm rouded"
+            style={{ width: "50%", marginLeft: "25%", textAlign: "center" }}
+          >
+            <thead className="table-success">
+              <tr>
+                <th>Name</th>
+                <th>Total Spent</th>
+              </tr>
+            </thead>
+            {leaderboardValues.map((entry) => (
+              <tbody>
+                <td>{entry.name}</td>
+                <td>₹{entry.totalAmount}</td>
+              </tbody>
             ))}
-          </div>
-        )}
-      </div>
+          </Table>
+        </div>
+      )}
     </div>
   );
 };

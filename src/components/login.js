@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Alert, Button, Card, Form } from "react-bootstrap";
 import "./signup.css";
+import { Link } from "react-router-dom";
 
 const Login = ({ onLoginSuccess }) => {
   const [enteredMail, setEnteredMail] = useState("");
@@ -83,6 +84,13 @@ const Login = ({ onLoginSuccess }) => {
             />
           </Form.Group>
           {error && <Alert variant="danger">{error}</Alert>}
+          <div
+            style={{
+              textAlign: "center",
+            }}
+          >
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </div>
           <div
             style={{
               textAlign: "center",
