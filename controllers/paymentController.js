@@ -1,5 +1,4 @@
-const db = require("../utils/db-connection");
-
+const sequelize = require("../utils/db-connection");
 const {
   createOrder,
   getPaymentStatus,
@@ -12,6 +11,7 @@ const processPayment = async (req, res) => {
   const orderCurrency = "INR";
   const customerId = "1";
   const customerPhone = "9999999999";
+  const transaction = await sequelize.transaction();
 
   try {
     const paymentSessionId = await createOrder(
@@ -33,17 +33,21 @@ const processPayment = async (req, res) => {
         customer_id: customerId,
         customer_phone: customerPhone,
         order_expiry_time: new Date(Date.now() + 60 * 60 * 1000),
-      });
+      }),
+        { transaction: transaction };
 
+      await transaction.commit();
       return res
         .status(200)
         .json({ payment_session_id: paymentSessionId, order_id: orderId });
     } else {
+      await transaction.rollback();
       return res
         .status(500)
         .json({ message: "Failed to create payment session" });
     }
   } catch (error) {
+    await transaction.rollback();
     console.error("Error in processPayment:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
