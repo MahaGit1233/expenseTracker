@@ -1,13 +1,15 @@
-const { Users } = require("../modals");
+const { v4: uuidv4 } = require("uuid");
+const { Users, ForgotPassword } = require("../modals");
 const sequelize = require("../utils/db-connection");
-const Sib = require("sib-api-v3-sdk");
 require("dotenv").config();
+const Sib = require("sib-api-v3-sdk");
+const bcrypt = require("bcrypt");
 
 const client = Sib.ApiClient.instance;
 
-const apikey = client.authentications["api-key"];
+const apiKey = client.authentications["api-key"];
 console.log("loaded api_key:", process.env.API_KEY);
-apikey.apikey = process.env.API_KEY;
+apiKey.apikey = process.env.API_KEY;
 
 const tranEmailApi = new Sib.TransactionalEmailsApi();
 
@@ -27,9 +29,16 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const resetLink = `http://localhost:3000/password/resetpassword/${user.id}`;
+    const id = uuidv4();
+    await ForgotPassword.create({
+      id,
+      userId: user.id,
+      isactive: true,
+    });
 
-    tranEmailApi.sendTransacEmail({
+    const resetLink = `http://localhost:3000/password/resetpassword/${id}`;
+
+    await tranEmailApi.sendTransacEmail({
       sender,
       to: [{ email }],
       subject: "Rest password link",
@@ -47,6 +56,56 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const getResetPasswordForm = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const request = await ForgotPassword.findOne({ where: { id } });
+
+    if (!request || !request.isactive) {
+      return res.status(400).send("<h2>Reset link expired or invalid</h2>");
+    }
+
+    res.send(`
+      <form action="/password/updatepassword/${id}" method="POST">
+        <label>New Password:</label>
+        <input type="password" name="password" required/>
+        <button type="submit">Update Password</button>
+      </form>
+    `);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Something went wrong");
+  }
+};
+
+const updatePassword = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { password } = req.body;
+
+    const request = await ForgotPassword.findOne({ where: { id } });
+    if (!request || !request.isactive) {
+      return res.status(400).send("Reset request expired or invalid");
+    }
+
+    const user = await Users.findByPk(request.userId);
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    request.isactive = false;
+    await request.save();
+
+    res.send("Password updated successfully. You can now log in.");
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Failed to update password");
+  }
+};
+
 module.exports = {
   forgotPassword,
+  getResetPasswordForm,
+  updatePassword,
 };

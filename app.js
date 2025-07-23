@@ -15,6 +15,7 @@ const userModal = require("./modals/Users");
 const expenseModal = require("./modals/Expenses");
 const indexModal = require("./modals/index");
 const orderModal = require("./modals/Orders");
+const forgotPasswordModal = require("./modals/ForgotPassword");
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello World</h1>");
