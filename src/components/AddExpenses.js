@@ -7,6 +7,8 @@ const AddExpenses = (props) => {
   const [enteredAmount, setEnteredAmount] = useState("");
   const [enteredDescription, setEnteredDescription] = useState("");
   const [selectedOption, SetSelectedOption] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+  const [enteredDate, setEnteredDate] = useState(today);
   const [showForm, setShowForm] = useState("");
   const [expenses, setExpenses] = useState([]);
   const [header, setHeader] = useState(false);
@@ -26,9 +28,18 @@ const AddExpenses = (props) => {
     SetSelectedOption(event.target.value);
   };
 
+  const dateChangeHandler = (event) => {
+    setEnteredDate(event.target.value);
+  };
+
   const toggleForm = () => {
     setShowForm((prev) => !prev);
   };
+
+  // const formatDate = (dateStr) => {
+  //   const date = new Date(dateStr);
+  //   return new Intl.DateTimeFormat("en-GB").format(date);
+  // };
 
   useEffect(() => {
     if (!token) return;
@@ -63,6 +74,7 @@ const AddExpenses = (props) => {
       amountSpent: enteredAmount,
       description: enteredDescription,
       category: selectedOption,
+      date: enteredDate,
     };
 
     if (!enteredAmount || !enteredDescription || !selectedOption) {
@@ -84,6 +96,7 @@ const AddExpenses = (props) => {
     setEnteredAmount("");
     setEnteredDescription("");
     SetSelectedOption("");
+    setEnteredDate("");
   };
 
   const deleteHandler = async (id) => {
@@ -168,6 +181,64 @@ const AddExpenses = (props) => {
     } catch (error) {
       console.log("Error fetching leaderboard:", error.message);
     }
+  };
+
+  const groupByDateThenMonth = (expenses) => {
+    const grouped = {};
+
+    expenses.forEach((expense) => {
+      const dateObj = new Date(expense.date);
+
+      const dateKey = new Intl.DateTimeFormat("en-GB").format(dateObj);
+      const monthKey = dateObj.toLocaleString("en-GB", {
+        month: "long",
+        year: "numeric",
+      });
+
+      if (!grouped[monthKey]) grouped[monthKey] = {};
+      if (!grouped[monthKey][dateKey]) grouped[monthKey][dateKey] = [];
+
+      grouped[monthKey][dateKey].push(expense);
+    });
+
+    return grouped;
+  };
+
+  const groupedExpenses = groupByDateThenMonth(expenses);
+
+  const handleDownload = () => {
+    if (expenses.length === 0) return;
+
+    const headers = ["Date", "Amount", "Description", "Category"];
+    const rows = [];
+
+    Object.entries(groupedExpenses).forEach(([month, dates]) => {
+      Object.entries(dates).forEach(([date, expenseList]) => {
+        expenseList.forEach((expense) => {
+          rows.push([
+            date,
+            expense.amountSpent,
+            expense.description,
+            expense.category,
+          ]);
+        });
+      });
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((r) => r.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "expenses.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -267,6 +338,15 @@ const AddExpenses = (props) => {
                   <option>Groceries</option>
                 </Form.Select>
               </Form.Group>
+              <Form.Group>
+                <Form.Label className="formlabel">Date:</Form.Label>
+                <Form.Control
+                  className="forminput"
+                  type="date"
+                  value={enteredDate}
+                  onChange={dateChangeHandler}
+                />
+              </Form.Group>
               <div style={{ textAlign: "center", paddingBottom: "0.5rem" }}>
                 <Button type="submit" variant="outline-dark">
                   Add
@@ -287,7 +367,6 @@ const AddExpenses = (props) => {
         <div style={{ marginTop: "1rem" }}>
           <h3 style={{ marginLeft: "20%" }}>Your Expenses:</h3>
           <Table
-            striped
             hover
             responsive
             className="mt-4 shadow-sm rouded"
@@ -295,27 +374,63 @@ const AddExpenses = (props) => {
           >
             <thead className="table-success">
               <tr>
+                <th>Date</th>
                 <th>Amount</th>
                 <th>Description</th>
                 <th>Category</th>
               </tr>
             </thead>
-            {expenses.map((expense) => (
-              <tbody>
-                <td>₹{expense.amountSpent}</td>
-                <td>{expense.description}</td>
-                <td>{expense.category}</td>
-                <td>
-                  <Button
-                    variant="outline-dark"
-                    size="sm"
-                    onClick={() => deleteHandler(expense.id)}
-                  >
-                    Delete
-                  </Button>
-                </td>
-              </tbody>
-            ))}
+            <tbody>
+              {Object.entries(groupedExpenses).map(([month, dates]) => (
+                <React.Fragment>
+                  <tr>
+                    <td
+                      colSpan="5"
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "1.1rem",
+                        backgroundColor: "#93C572",
+                      }}
+                    >
+                      {month}
+                    </td>
+                  </tr>
+                  {Object.entries(dates).map(([date, expensebydate]) => (
+                    <React.Fragment>
+                      <tr>
+                        <td
+                          style={{
+                            fontStyle: "italic",
+                            color: "#555",
+                            fontWeight: "700",
+                            backgroundColor: "#9FE2BF",
+                          }}
+                        >
+                          {date}
+                        </td>
+                      </tr>
+                      {expensebydate.map((expense) => (
+                        <tr>
+                          <td>{date}</td>
+                          <td>₹{expense.amountSpent}</td>
+                          <td>{expense.description}</td>
+                          <td>{expense.category}</td>
+                          <td>
+                            <Button
+                              variant="outline-dark"
+                              size="sm"
+                              onClick={() => deleteHandler(expense.id)}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
           </Table>
         </div>
       )}
@@ -323,6 +438,11 @@ const AddExpenses = (props) => {
       {leaderboardValues.length > 0 && (
         <div style={{ marginTop: "1rem" }}>
           <h4 style={{ marginLeft: "20%" }}>Leaderboard</h4>
+          <div style={{ textAlign: "center" }}>
+            <Button variant="outline-danger" onClick={handleDownload}>
+              Download Expenses
+            </Button>
+          </div>
           <Table
             striped
             hover
