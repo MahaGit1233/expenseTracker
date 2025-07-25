@@ -15,6 +15,9 @@ const AddExpenses = (props) => {
   const [leaderboardValues, setLeaderboardValues] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationData, setPaginationData] = useState({});
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    return parseInt(localStorage.getItem("itemsPerPage")) || 10;
+  });
 
   const token = localStorage.getItem("token");
 
@@ -38,21 +41,17 @@ const AddExpenses = (props) => {
     setShowForm((prev) => !prev);
   };
 
-  // const formatDate = (dateStr) => {
-  //   const date = new Date(dateStr);
-  //   return new Intl.DateTimeFormat("en-GB").format(date);
-  // };
-
-  useEffect(() => {
-    if (!token) return;
-
-    fetch(`http://localhost:4000/expenses/get?page=${currentPage}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-    })
+  const fetchExpenses = () => {
+    fetch(
+      `http://localhost:4000/expenses/get?page=${currentPage}&limit=${itemsPerPage}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      }
+    )
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch expenses");
@@ -67,7 +66,14 @@ const AddExpenses = (props) => {
       .catch((err) => {
         console.log(err.message);
       });
-  }, [token, currentPage]);
+  };
+
+  useEffect(() => {
+    if (!token) return;
+
+    localStorage.setItem("itemsPerPage", itemsPerPage);
+    fetchExpenses();
+  }, [token, currentPage, itemsPerPage]);
 
   const addExpenseHandler = async (event) => {
     event.preventDefault();
@@ -113,12 +119,18 @@ const AddExpenses = (props) => {
         },
       }
     );
-    if (response.ok) {
-      console.log("Expense successfully deleted");
+
+    if (!response.ok) {
+      throw new Error("Failed to delete expense");
     }
-    setExpenses((prevExpenses) =>
-      prevExpenses.filter((expense) => expense.id !== id)
-    );
+
+    console.log("Expense deleted successfully");
+
+    if (expenses.length === 1 && currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    } else {
+      fetchExpenses();
+    }
   };
 
   const premiumHandler = async () => {
@@ -439,24 +451,46 @@ const AddExpenses = (props) => {
       )}
 
       {paginationData && (
-        <div style={{ textAlign: "center", marginTop: "1rem" }}>
-          <Button
-            variant="outline-dark"
-            disabled={!paginationData.hasPreviousPage}
-            onClick={() => setCurrentPage(paginationData.previousPage)}
-          >
-            Previous
-          </Button>{" "}
-          <span>
-            Page {paginationData.currentPage} of {paginationData.lastPage}
-          </span>{" "}
-          <Button
-            variant="outline-dark"
-            disabled={!paginationData.hasNextPage}
-            onClick={() => setCurrentPage(paginationData.nextPage)}
-          >
-            Next
-          </Button>
+        <div>
+          <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+            <label htmlFor="itemsPerPageSelect" style={{ marginRight: "10px" }}>
+              Show
+            </label>
+            <select
+              id="itemsPerPageSelect"
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(parseInt(e.target.value));
+                setCurrentPage(1);
+              }}
+            >
+              <option value="2">2</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+            </select>
+            <span> expenses per page</span>
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "1rem" }}>
+            <Button
+              variant="outline-dark"
+              disabled={!paginationData.hasPreviousPage}
+              onClick={() => setCurrentPage(paginationData.previousPage)}
+            >
+              Previous
+            </Button>{" "}
+            <span>
+              Page {paginationData.currentPage} of {paginationData.lastPage}
+            </span>{" "}
+            <Button
+              variant="outline-dark"
+              disabled={!paginationData.hasNextPage}
+              onClick={() => setCurrentPage(paginationData.nextPage)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
 
