@@ -13,6 +13,8 @@ const AddExpenses = (props) => {
   const [expenses, setExpenses] = useState([]);
   const [header, setHeader] = useState(false);
   const [leaderboardValues, setLeaderboardValues] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginationData, setPaginationData] = useState({});
 
   const token = localStorage.getItem("token");
 
@@ -44,7 +46,7 @@ const AddExpenses = (props) => {
   useEffect(() => {
     if (!token) return;
 
-    fetch(`http://localhost:4000/expenses/get`, {
+    fetch(`http://localhost:4000/expenses/get?page=${currentPage}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -59,12 +61,13 @@ const AddExpenses = (props) => {
       })
       .then((data) => {
         console.log(data);
-        setExpenses(data);
+        setExpenses(data.expense);
+        setPaginationData(data);
       })
       .catch((err) => {
         console.log(err.message);
       });
-  }, [token]);
+  }, [token, currentPage]);
 
   const addExpenseHandler = async (event) => {
     event.preventDefault();
@@ -432,6 +435,28 @@ const AddExpenses = (props) => {
               ))}
             </tbody>
           </Table>
+        </div>
+      )}
+
+      {paginationData && (
+        <div style={{ textAlign: "center", marginTop: "1rem" }}>
+          <Button
+            variant="outline-dark"
+            disabled={!paginationData.hasPreviousPage}
+            onClick={() => setCurrentPage(paginationData.previousPage)}
+          >
+            Previous
+          </Button>{" "}
+          <span>
+            Page {paginationData.currentPage} of {paginationData.lastPage}
+          </span>{" "}
+          <Button
+            variant="outline-dark"
+            disabled={!paginationData.hasNextPage}
+            onClick={() => setCurrentPage(paginationData.nextPage)}
+          >
+            Next
+          </Button>
         </div>
       )}
 
