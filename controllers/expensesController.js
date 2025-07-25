@@ -5,13 +5,14 @@ const sequelize = require("../utils/db-connection");
 const addExpenses = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    const { amountSpent, description, category } = req.body;
+    const { amountSpent, description, category, date } = req.body;
 
     const expense = await Expenses.create(
       {
         amountSpent: amountSpent,
         description: description,
         category: category,
+        date: date,
         UserId: req.user.id,
       },
       { transaction: transaction }
@@ -25,7 +26,7 @@ const addExpenses = async (req, res) => {
     await user.save({ transaction: transaction });
 
     await transaction.commit();
-    res.status(201).send(`Expense added successfully`);
+    res.status(201).json({ message: "Expense added successfully", expense });
   } catch (error) {
     await transaction.rollback();
     res.status(500).send(error.message);
@@ -33,11 +34,25 @@ const addExpenses = async (req, res) => {
 };
 
 const getExpenses = async (req, res) => {
+  const page = +req.query.page || 1;
+  const itemsPerPage = 10;
+
   try {
+    const totalItems = await Expenses.count({ where: { UserId: req.user.id } });
     const expense = await Expenses.findAll({
       where: { UserId: req.user.id },
+      offset: (page - 1) * itemsPerPage,
+      limit: itemsPerPage,
     });
-    res.status(200).json(expense);
+    res.status(200).json({
+      expense,
+      currentPage: page,
+      hasNextPage: itemsPerPage * page < totalItems,
+      nextPage: page + 1,
+      hasPreviousPage: page > 1,
+      previousPage: page - 1,
+      lastPage: Math.ceil(totalItems / itemsPerPage),
+    });
   } catch (error) {
     res.status(500).send("Unable to fetch the expenses");
   }
