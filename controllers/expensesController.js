@@ -35,23 +35,23 @@ const addExpenses = async (req, res) => {
 
 const getExpenses = async (req, res) => {
   const page = +req.query.page || 1;
-  const itemsPerPage = 10;
+  const limit=+req.query.limit||10;
 
   try {
     const totalItems = await Expenses.count({ where: { UserId: req.user.id } });
     const expense = await Expenses.findAll({
       where: { UserId: req.user.id },
-      offset: (page - 1) * itemsPerPage,
-      limit: itemsPerPage,
+      offset: (page - 1) * limit,
+      limit: limit,
     });
     res.status(200).json({
       expense,
       currentPage: page,
-      hasNextPage: itemsPerPage * page < totalItems,
+      hasNextPage: limit * page < totalItems,
       nextPage: page + 1,
       hasPreviousPage: page > 1,
       previousPage: page - 1,
-      lastPage: Math.ceil(totalItems / itemsPerPage),
+      lastPage: Math.ceil(totalItems / limit),
     });
   } catch (error) {
     res.status(500).send("Unable to fetch the expenses");
