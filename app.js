@@ -1,15 +1,27 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const db = require("./utils/db-connection");
 const cors = require("cors");
+const morgan = require("morgan");
+const fs = require("fs");
+const path = require("path");
+
 const signupRouter = require("./routes/signupRoute");
 const expensesRouter = require("./routes/expensesRoute");
 const paymentRouter = require("./routes/paymentRoute");
 const preiumRouter = require("./routes/premiumRoute");
 const passRouter = require("./routes/forgotPassRoute");
 
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
+
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(morgan("combined", { stream: accessLogStream }));
 
 const userModal = require("./modals/Users");
 const expenseModal = require("./modals/Expenses");

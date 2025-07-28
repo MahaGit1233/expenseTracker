@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const generateAccessToken = (id) => {
-  return jwt.sign({ id }, "123456789");
+  return jwt.sign({ id }, process.env.TOKEN);
 };
 
 const addSignedUpUsers = async (req, res) => {

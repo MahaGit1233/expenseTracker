@@ -1,7 +1,7 @@
+require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const { Users, ForgotPassword } = require("../modals");
 const sequelize = require("../utils/db-connection");
-require("dotenv").config();
 const Sib = require("sib-api-v3-sdk");
 const bcrypt = require("bcrypt");
 
@@ -9,17 +9,19 @@ const client = Sib.ApiClient.instance;
 
 const apiKey = client.authentications["api-key"];
 console.log("loaded api_key:", process.env.API_KEY);
-apiKey.apikey = process.env.API_KEY;
+apiKey.apiKey = process.env.API_KEY;
 
 const tranEmailApi = new Sib.TransactionalEmailsApi();
 
 const sender = {
-  email: "maharush5409@gmail.com",
+  email: process.env.EMAIL,
 };
 
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    console.log("received email:", email);
+
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -32,11 +34,11 @@ const forgotPassword = async (req, res) => {
     const id = uuidv4();
     await ForgotPassword.create({
       id,
-      userId: user.id,
+      UserId: user.id,
       isactive: true,
     });
 
-    const resetLink = `http://localhost:3000/password/resetpassword/${id}`;
+    const resetLink = `http://localhost:4000/password/resetpassword/${id}`;
 
     await tranEmailApi.sendTransacEmail({
       sender,
@@ -49,7 +51,12 @@ const forgotPassword = async (req, res) => {
         `,
     });
 
-    res.status(200).json({ message: "Password reset link sent successfully" });
+    res
+      .status(200)
+      .json({
+        message: "Password reset link sent successfully",
+        email: user.email,
+      });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong" });
@@ -88,7 +95,7 @@ const updatePassword = async (req, res) => {
       return res.status(400).send("Reset request expired or invalid");
     }
 
-    const user = await Users.findByPk(request.userId);
+    const user = await Users.findByPk(request.UserId);
     const hashedPassword = await bcrypt.hash(password, 10);
 
     user.password = hashedPassword;
