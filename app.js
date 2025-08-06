@@ -13,6 +13,8 @@ const paymentRouter = require("./routes/paymentRoute");
 const preiumRouter = require("./routes/premiumRoute");
 const passRouter = require("./routes/forgotPassRoute");
 
+app.use(express.static(path.join(__dirname, "build")));
+
 const accessLogStream = fs.createWriteStream(
   path.join(__dirname, "access.log"),
   { flags: "a" }
@@ -38,6 +40,10 @@ app.use("/expenses", expensesRouter);
 app.use("/payment", paymentRouter);
 app.use("/premium", preiumRouter);
 app.use("/password", passRouter);
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
 
 db.sync({ force: true })
   .then(() => {
