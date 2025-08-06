@@ -221,39 +221,51 @@ const AddExpenses = (props) => {
 
   const groupedExpenses = groupByDateThenMonth(expenses);
 
-  const handleDownload = () => {
-    if (expenses.length === 0) return;
-
-    const headers = ["Date", "Amount", "Description", "Category"];
-    const rows = [];
-
-    Object.entries(groupedExpenses).forEach(([month, dates]) => {
-      Object.entries(dates).forEach(([date, expenseList]) => {
-        expenseList.forEach((expense) => {
-          rows.push([
-            date,
-            expense.amountSpent,
-            expense.description,
-            expense.category,
-          ]);
-        });
-      });
+  const handleDownload = async () => {
+    const response = await fetch("http://localhost:4000/expenses/download", {
+      headers: {
+        Authorization: token,
+      },
     });
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((r) => r.join(",")),
-    ].join("\n");
+    const data = await response.json();
+    if (data.success) {
+      window.open(data.fileUrl);
+    } else {
+      alert("Failed to download expenses");
+    }
+    // if (expenses.length === 0) return;
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    // const headers = ["Date", "Amount", "Description", "Category"];
+    // const rows = [];
 
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "expenses.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Object.entries(groupedExpenses).forEach(([month, dates]) => {
+    //   Object.entries(dates).forEach(([date, expenseList]) => {
+    //     expenseList.forEach((expense) => {
+    //       rows.push([
+    //         date,
+    //         expense.amountSpent,
+    //         expense.description,
+    //         expense.category,
+    //       ]);
+    //     });
+    //   });
+    // });
+
+    // const csvContent = [
+    //   headers.join(","),
+    //   ...rows.map((r) => r.join(",")),
+    // ].join("\n");
+
+    // const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    // const url = URL.createObjectURL(blob);
+
+    // const link = document.createElement("a");
+    // link.setAttribute("href", url);
+    // link.setAttribute("download", "expenses.csv");
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
   };
 
   return (
