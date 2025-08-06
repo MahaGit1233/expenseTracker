@@ -41,7 +41,7 @@ app.use("/payment", paymentRouter);
 app.use("/premium", preiumRouter);
 app.use("/password", passRouter);
 
-app.get("*", (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
